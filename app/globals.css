@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { scroll-behavior: smooth; }
+body { background: #fff; color: #2b2f2d; }
+section[id] { scroll-margin-top: 70px; }
+:focus-visible { outline: 3px solid #e2a912; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
