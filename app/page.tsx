@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { categorias, instrutores, brl, DESCONTO_PIX, waLink } from "./config";
+import fachada from "./fachada.jpg";
 
 const turnos = ["Manhã", "Tarde", "Noite"];
 
@@ -54,20 +55,27 @@ export default function Home() {
   return (
     <>
       <section className="bg-verde text-white">
-        <div className="mx-auto max-w-5xl px-4 py-14 sm:py-20">
-          <h1 className="max-w-2xl text-4xl font-extrabold leading-tight sm:text-5xl">
-            Tire sua habilitação em Reserva, do seu jeito.
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-white/85">
-            Escolha seu pacote de aulas, veja o preço e comece a inscrição pelo celular, a qualquer hora.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href="#inscricao" className={botaoOuro}>Começar minha habilitação</a>
-            <a href="#precos" className={botaoBorda}>Ver preços</a>
-            <a href={waLink("Olá! Vim pelo site da Autoescola Reserva VIP e tenho uma dúvida.")} target="_blank" rel="noopener noreferrer" className={botaoBorda}>
-              Tirar dúvidas
-            </a>
+        <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 sm:py-16 md:grid-cols-2">
+          <div>
+            <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
+              Tire sua habilitação em Reserva, do seu jeito.
+            </h1>
+            <p className="mt-4 max-w-xl text-lg text-white/85">
+              Escolha seu pacote de aulas, veja o preço e comece a inscrição pelo celular, a qualquer hora.
+            </p>
+            <div className="mt-8 flex flex-col gap-3">
+              <a href="#inscricao" className={botaoOuro}>Começar minha habilitação</a>
+              <a href="#precos" className={botaoBorda}>Ver preços</a>
+              <a href={waLink("Olá! Vim pelo site da Autoescola Reserva VIP e tenho uma dúvida.")} target="_blank" rel="noopener noreferrer" className={botaoBorda}>
+                Tirar dúvidas
+              </a>
+            </div>
           </div>
+          <img
+            src={fachada.src}
+            alt="Fachada da Autoescola Reserva VIP, em Reserva (PR)"
+            className="w-full rounded-xl border-4 border-ouro/80 shadow-lg"
+          />
         </div>
       </section>
 

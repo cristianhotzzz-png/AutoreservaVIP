@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 import { WHATSAPP_LABEL, waLink } from "./config";
+import logo from "./logo.jpg";
 
 const font = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-main" });
 
@@ -20,8 +21,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${font.variable} font-sans antialiased`}>
         <header className="sticky top-0 z-40 bg-verde text-white shadow">
           <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-            <a href="#topo" className="text-lg font-extrabold leading-tight">
-              Autoescola <span className="text-ouro">Reserva VIP</span>
+            <a href="#topo" aria-label="Autoescola Reserva VIP, início">
+              <img src={logo.src} alt="Autoescola Reserva VIP" className="h-12 w-auto rounded-md" />
             </a>
             <nav className="flex items-center gap-4 text-sm font-semibold">
               <a href="#precos" className="hover:text-ouro">Preços</a>
@@ -36,8 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <footer className="bg-verde text-white">
           <div className="mx-auto max-w-5xl px-4 py-8 text-sm">
-            <p className="text-base font-bold">Autoescola Reserva VIP</p>
-            <p className="mt-1 text-white/80">Reserva, Paraná</p>
+            <img src={logo.src} alt="Autoescola Reserva VIP" className="h-20 w-auto rounded-md" />
+            <p className="mt-3 text-white/80">Reserva, Paraná</p>
             <p className="mt-3">
               WhatsApp:{" "}
               <a className="font-semibold text-ouro underline" href={duvida}>{WHATSAPP_LABEL}</a>
