@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { categorias, instrutores, brl, DESCONTO_PIX, waLink } from "./config";
 import fachada from "./fachada.jpg";
 
@@ -25,6 +25,15 @@ export default function Home() {
   const [pagamento, setPagamento] = useState<"Pix" | "Cartão">("Pix");
   const [turno, setTurno] = useState(turnos[0]);
   const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [aviso, setAviso] = useState("");
+
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("pagamento");
+    if (r === "sucesso") setAviso("sucesso");
+    else if (r === "pendente") setAviso("pendente");
+    else if (r === "falhou") setAviso("falhou");
+  }, []);
 
   const cat = categorias.find((c) => c.id === catId)!;
   const pacote = cat.pacotes.find((p) => p.aulas === aulas) ?? cat.pacotes[0];
@@ -35,11 +44,15 @@ export default function Home() {
     setAulas(categorias.find((x) => x.id === id)!.pacotes[0].aulas);
   }
 
-  function enviar(e: React.FormEvent) {
-    e.preventDefault();
-    if (nome.trim().length < 3) return setErro("Digite seu nome completo.");
-    if (telefone.replace(/\D/g, "").length < 10) return setErro("Digite um telefone com DDD.");
+  function validar() {
+    if (nome.trim().length < 3) { setErro("Digite seu nome completo."); return false; }
+    if (telefone.replace(/\D/g, "").length < 10) { setErro("Digite um telefone com DDD."); return false; }
     setErro("");
+    return true;
+  }
+
+  function enviarWhatsApp() {
+    if (!validar()) return;
     const msg =
       `Olá! Quero fazer minha inscrição.\n` +
       `Nome: ${nome.trim()}\nTelefone: ${telefone.trim()}\n` +
@@ -48,12 +61,41 @@ export default function Home() {
     window.open(waLink(msg), "_blank", "noopener,noreferrer");
   }
 
+  async function pagarOnline(e: React.FormEvent) {
+    e.preventDefault();
+    if (!validar()) return;
+    setEnviando(true);
+    try {
+      const res = await fetch("/api/pagamento", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome, telefone, catId, aulas, pagamento, turno }),
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setErro(data.erro || "Não foi possível abrir o pagamento. Tente pelo WhatsApp.");
+    } catch {
+      setErro("Sem conexão. Tente de novo ou use o WhatsApp.");
+    }
+    setEnviando(false);
+  }
+
   const campo = "mt-1 w-full rounded-lg border border-verde/30 bg-white p-3 text-base";
   const botaoOuro = "rounded-full bg-ouro px-6 py-3 text-center font-bold text-verde hover:bg-ouro-escuro hover:text-white";
   const botaoBorda = "rounded-full border-2 border-white/70 px-6 py-3 text-center font-bold hover:bg-white/10";
 
   return (
     <>
+      {aviso && (
+        <div role="status" className={`px-4 py-3 text-center font-semibold ${aviso === "sucesso" ? "bg-green-100 text-green-900" : aviso === "pendente" ? "bg-yellow-100 text-yellow-900" : "bg-red-100 text-red-900"}`}>
+          {aviso === "sucesso" && "Pagamento aprovado! Guarde o comprovante e avise a equipe pelo WhatsApp se precisar."}
+          {aviso === "pendente" && "Pagamento pendente. O Pix pode levar alguns minutos para confirmar."}
+          {aviso === "falhou" && "O pagamento não foi concluído. Tente de novo ou chame a equipe no WhatsApp."}
+        </div>
+      )}
       <section className="bg-verde text-white">
         <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 sm:py-16 md:grid-cols-2">
           <div>
@@ -128,9 +170,9 @@ export default function Home() {
       <section id="inscricao" className="mx-auto max-w-xl px-4 py-12">
         <h2 className="text-3xl font-extrabold text-verde">Começar minha habilitação</h2>
         <p className="mt-2 text-grafite/80">
-          Escolha seu pacote e envie a inscrição. Ela chega direto para a equipe no WhatsApp.
+          Escolha seu pacote e pague online, ou envie a inscrição para a equipe pelo WhatsApp.
         </p>
-        <form onSubmit={enviar} className="mt-8 space-y-5">
+        <form onSubmit={pagarOnline} className="mt-8 space-y-5">
           <label className="block font-semibold">
             Nome completo
             <input className={campo} value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" />
@@ -173,8 +215,11 @@ export default function Home() {
             <p className="text-3xl font-extrabold text-verde">{brl(total)}</p>
           </div>
           {erro && <p role="alert" className="font-semibold text-red-700">{erro}</p>}
-          <button type="submit" className="w-full rounded-full bg-ouro px-6 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white">
-            Enviar inscrição pelo WhatsApp
+          <button type="submit" disabled={enviando} className="w-full rounded-full bg-ouro px-6 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white disabled:opacity-60">
+            {enviando ? "Abrindo pagamento..." : `Pagar online (${pagamento})`}
+          </button>
+          <button type="button" onClick={enviarWhatsApp} className="w-full rounded-full border-2 border-verde px-6 py-3 font-bold text-verde hover:bg-verde-fundo">
+            Prefiro combinar pelo WhatsApp
           </button>
         </form>
       </section>
