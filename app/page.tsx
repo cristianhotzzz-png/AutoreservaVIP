@@ -1,8 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { categorias, instrutores, brl, DESCONTO_PIX, waLink } from "./config";
 import fachada from "./fachada.jpg";
+import aprovado1 from "./aprovado1.jpg";
+import aprovado2 from "./aprovado2.jpg";
+import aprovado3 from "./aprovado3.jpg";
+import aprovado4 from "./aprovado4.jpg";
+import aprovado5 from "./aprovado5.jpg";
+import aprovado6 from "./aprovado6.jpg";
+import aprovado7 from "./aprovado7.jpg";
+import aprovado8 from "./aprovado8.jpg";
+import aprovado9 from "./aprovado9.jpg";
+
+// Para acrescentar ou tirar fotos de alunos aprovados, mexa só nesta lista.
+const aprovados = [aprovado1, aprovado2, aprovado3, aprovado4, aprovado5, aprovado6, aprovado7, aprovado8, aprovado9].map((f) => f.src);
+
+// Mude para true quando o pagamento online (PagBank) estiver configurado.
+const PAGAMENTO_ONLINE = false;
 
 const turnos = ["Manhã", "Tarde", "Noite"];
 
@@ -16,6 +31,90 @@ const perguntas = [
   { q: "Em quais horários há aulas?",
     a: "Há instrutores nos turnos da manhã, tarde e noite. Na inscrição você diz o turno que prefere." },
 ];
+
+function Aprovados({ fotos }: { fotos: string[] }) {
+  const trilho = useRef<HTMLDivElement>(null);
+  const pausaAte = useRef(0);
+  const [atual, setAtual] = useState(0);
+  const n = fotos.length;
+
+  function ir(i: number) {
+    const el = trilho.current;
+    if (!el) return;
+    el.scrollTo({ left: ((i + n) % n) * el.clientWidth, behavior: "smooth" });
+  }
+
+  function pausar() {
+    pausaAte.current = Date.now() + 8000;
+  }
+
+  useEffect(() => {
+    if (n < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => {
+      if (Date.now() < pausaAte.current) return;
+      const el = trilho.current;
+      if (!el) return;
+      ir(Math.round(el.scrollLeft / el.clientWidth) + 1);
+    }, 4000);
+    return () => clearInterval(t);
+  });
+
+  if (n === 0) return null;
+
+  return (
+    <section id="aprovados" className="bg-verde text-white">
+      <div className="mx-auto max-w-5xl px-4 py-12 text-center">
+        <h2 className="text-3xl font-extrabold text-ouro">Alunos aprovados</h2>
+        <p className="mt-2 text-white/85">Você pode ser o próximo.</p>
+
+        <div className="relative mx-auto mt-8 w-full max-w-sm" onPointerDown={pausar} onMouseEnter={pausar}>
+          <div
+            ref={trilho}
+            onScroll={(e) => setAtual(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}
+            className="flex snap-x snap-mandatory overflow-x-auto rounded-2xl border-4 border-ouro shadow-lg [&::-webkit-scrollbar]:hidden"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {fotos.map((src, i) => (
+              <img
+                key={src}
+                src={src}
+                alt={`Aluno aprovado na Autoescola Reserva VIP, foto ${i + 1}`}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className="aspect-square w-full shrink-0 snap-center object-cover"
+              />
+            ))}
+          </div>
+          {n > 1 && (
+            <>
+              <button type="button" aria-label="Foto anterior" onClick={() => { pausar(); ir(atual - 1); }} className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-bold text-verde shadow">
+                ‹
+              </button>
+              <button type="button" aria-label="Próxima foto" onClick={() => { pausar(); ir(atual + 1); }} className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-2xl font-bold text-verde shadow">
+                ›
+              </button>
+            </>
+          )}
+        </div>
+
+        {n > 1 && (
+          <div className="mt-4 flex justify-center gap-2">
+            {fotos.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Ir para a foto ${i + 1}`}
+                onClick={() => { pausar(); ir(i); }}
+                className={`h-2.5 rounded-full transition-all ${i === atual ? "w-6 bg-ouro" : "w-2.5 bg-white/50"}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const [nome, setNome] = useState("");
@@ -119,10 +218,10 @@ export default function Home() {
         <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 py-12 sm:py-16 md:grid-cols-2">
           <div>
             <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl">
-              Tire sua habilitação em Reserva, do seu jeito.
+              CNH Fácil, Rápida e Barata!
             </h1>
             <p className="mt-4 max-w-xl text-lg text-white/85">
-              Escolha seu pacote de aulas, veja o preço e comece a inscrição pelo celular, a qualquer hora.
+              Somente uma Autoescola de verdade ensina a dirigir e a viver!
             </p>
             <div className="mt-8 flex flex-col gap-3">
               <a href="#inscricao" className={botaoOuro}>Começar minha habilitação</a>
@@ -177,21 +276,28 @@ export default function Home() {
           <h2 className="text-2xl font-extrabold text-verde">Nossos instrutores</h2>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {instrutores.map((i) => (
-              <li key={i.nome} className="flex items-center justify-between rounded-xl bg-white p-4 shadow-sm">
-                <span className="font-bold text-verde">{i.nome}</span>
-                <span className="text-sm text-grafite/70">{i.turnos}</span>
+              <li key={i.nome} className="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm">
+                <span aria-hidden="true" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-verde text-lg font-extrabold text-ouro">
+                  {i.nome.split(" ").map((x) => x[0]).slice(0, 2).join("")}
+                </span>
+                <span className="flex flex-col">
+                  <span className="font-bold text-verde">{i.nome}</span>
+                  <span className="text-sm text-grafite/70">{i.turnos}</span>
+                </span>
               </li>
             ))}
           </ul>
         </div>
       </section>
 
+      <Aprovados fotos={aprovados} />
+
       <section id="inscricao" className="mx-auto max-w-xl px-4 py-12">
         <h2 className="text-3xl font-extrabold text-verde">Começar minha habilitação</h2>
         <p className="mt-2 text-grafite/80">
-          Escolha seu pacote e pague online, ou envie a inscrição para a equipe pelo WhatsApp.
+          {PAGAMENTO_ONLINE ? "Escolha seu pacote e pague online, ou envie a inscrição para a equipe pelo WhatsApp." : "Escolha seu pacote e envie a inscrição para a equipe pelo WhatsApp."}
         </p>
-        <form onSubmit={pagarOnline} className="mt-8 space-y-5">
+        <form onSubmit={PAGAMENTO_ONLINE ? pagarOnline : (e) => { e.preventDefault(); enviarWhatsApp(); }} className="mt-8 space-y-5">
           <label className="block font-semibold">
             Nome completo
             <input className={campo} value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" />
@@ -234,12 +340,20 @@ export default function Home() {
             <p className="text-3xl font-extrabold text-verde">{brl(total)}</p>
           </div>
           {erro && <p role="alert" className="font-semibold text-red-700">{erro}</p>}
-          <button type="submit" disabled={enviando} className="w-full rounded-full bg-ouro px-6 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white disabled:opacity-60">
-            {enviando ? "Abrindo pagamento..." : `Pagar online (${pagamento})`}
-          </button>
-          <button type="button" onClick={enviarWhatsApp} className="w-full rounded-full border-2 border-verde px-6 py-3 font-bold text-verde hover:bg-verde-fundo">
-            Prefiro combinar pelo WhatsApp
-          </button>
+          {PAGAMENTO_ONLINE ? (
+            <>
+              <button type="submit" disabled={enviando} className="w-full rounded-full bg-ouro px-6 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white disabled:opacity-60">
+                {enviando ? "Abrindo pagamento..." : `Pagar online (${pagamento})`}
+              </button>
+              <button type="button" onClick={enviarWhatsApp} className="w-full rounded-full border-2 border-verde px-6 py-3 font-bold text-verde hover:bg-verde-fundo">
+                Prefiro combinar pelo WhatsApp
+              </button>
+            </>
+          ) : (
+            <button type="submit" className="w-full rounded-full bg-ouro px-6 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white">
+              Enviar inscrição pelo WhatsApp
+            </button>
+          )}
         </form>
 
         {pix && (
@@ -268,6 +382,32 @@ export default function Home() {
         )}
       </section>
 
+      <section id="onde" className="bg-verde-fundo">
+        <div className="mx-auto max-w-3xl px-4 py-12">
+          <h2 className="text-2xl font-extrabold text-verde">Onde estamos</h2>
+          <p className="mt-3 text-lg font-semibold">Avenida Coronel Rogério Borba, 1297 - Centro</p>
+          <p className="text-grafite/70">Reserva, Paraná</p>
+          <ul className="mt-5 space-y-2">
+            <li className="flex justify-between gap-4 rounded-xl bg-white p-4 shadow-sm">
+              <span className="font-bold text-verde">Segunda a sexta</span>
+              <span>08:00 às 18:00</span>
+            </li>
+            <li className="flex justify-between gap-4 rounded-xl bg-white p-4 shadow-sm">
+              <span className="font-bold text-verde">Sábado (pelo WhatsApp)</span>
+              <span>08:00 às 12:00</span>
+            </li>
+          </ul>
+          <a
+            href="https://www.google.com/maps/search/?api=1&query=Avenida+Coronel+Rog%C3%A9rio+Borba%2C+1297%2C+Centro%2C+Reserva%2C+PR"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-6 inline-block rounded-full bg-verde px-6 py-3 font-bold text-white hover:bg-verde-claro"
+          >
+            Como chegar
+          </a>
+        </div>
+      </section>
+
       <section id="duvidas" className="mx-auto max-w-3xl px-4 pb-14">
         <h2 className="mb-6 text-2xl font-extrabold text-verde">Dúvidas frequentes</h2>
         <div className="divide-y divide-verde/15 rounded-xl border border-verde/15 bg-white">
@@ -279,6 +419,19 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <section className="bg-verde text-white">
+        <div className="mx-auto max-w-3xl px-4 py-14 text-center">
+          <h2 className="text-3xl font-extrabold text-ouro sm:text-4xl">Sua liberdade começa aqui!</h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-white/90">
+            Conquiste sua CNH com confiança, segurança e o apoio de quem acredita no seu potencial.
+          </p>
+          <a href="#inscricao" className="mt-8 inline-block rounded-full bg-ouro px-8 py-3 text-lg font-bold text-verde hover:bg-ouro-escuro hover:text-white">
+            Começar minha habilitação
+          </a>
+        </div>
+      </section>
     </>
+
   );
 }
