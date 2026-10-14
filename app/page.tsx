@@ -21,15 +21,34 @@ const PAGAMENTO_ONLINE = false;
 
 const turnos = ["Manhã", "Tarde", "Noite"];
 
+const brl2 = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const detranPorCategoria: Record<string, number> = { B: 199.76, AB: 253.96, C: 145 };
+
+const custosExternos = (detran: number) => [
+  { nome: "Exame Psicotécnico", valor: 222.14, clinica: true },
+  { nome: "Aptidão Física e Mental", valor: 101.65, clinica: true },
+  { nome: "Exame toxicológico", valor: 100, clinica: true },
+  { nome: "Taxa Detran", valor: detran, clinica: false },
+];
+
 const perguntas = [
   { q: "Como funciona o desconto no Pix?",
     a: "Pagando no Pix você ganha R$ 50 de desconto fixo sobre o valor do pacote. No cartão, vale o preço cheio." },
   { q: "Qual pacote devo escolher?",
     a: "Quem nunca dirigiu costuma precisar de mais aulas. Se estiver em dúvida, chame a equipe no WhatsApp e conte sua experiência." },
-  { q: "Taxas públicas, exames médicos e avaliação psicológica estão nos pacotes?",
-    a: "Os valores desta página são dos pacotes de aulas. Confirme com a equipe pelo WhatsApp quais custos externos se aplicam ao seu caso." },
+  { q: "Exames e taxas do Detran estão incluídos nos pacotes?",
+    a: "Não. Os valores dos pacotes são das aulas. Os exames e a taxa do Detran têm valores à parte, que aparecem logo abaixo de cada tabela de preços. Para mais opções de pagamento, fale com a equipe pelo WhatsApp." },
   { q: "Em quais horários há aulas?",
     a: "Há instrutores nos turnos da manhã, tarde e noite. Na inscrição você diz o turno que prefere." },
+  { q: "Como funciona o exame do psicotécnico?",
+    a: "É um procedimento realizado por psicólogos credenciados para verificar se a pessoa possui as condições mentais, emocionais e comportamentais necessárias para exercer determinadas atividades com segurança, como conduzir um veículo." },
+  { q: "Como são realizadas as aulas teóricas?",
+    a: "Na modalidade EAD, com aulas gravadas pela nossa equipe!" },
+  { q: "A prova do Detran é muito difícil de passar?",
+    a: "Estudando bem, focando e se esforçando, não é difícil!" },
+  { q: "O exame prático não tem mais baliza. Quais são os principais pontos que devo aprender?",
+    a: "Aqui na nossa autoescola ensinamos a baliza para todos os alunos, independente do exame prático!" },
 ];
 
 function Aprovados({ fotos }: { fotos: string[] }) {
@@ -265,6 +284,23 @@ export default function Home() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+              <div className="mt-3 rounded-xl bg-verde-fundo p-4">
+                <p className="font-bold text-verde">Além do pacote (valores à parte)</p>
+                <ul className="mt-2 divide-y divide-verde/10">
+                  {custosExternos(detranPorCategoria[c.id] ?? 0).map((i) => (
+                    <li key={i.nome} className="flex items-baseline justify-between gap-4 py-2">
+                      <span>
+                        {i.nome}
+                        {i.clinica && <span className="block text-xs text-grafite/60">Pago diretamente na clínica</span>}
+                      </span>
+                      <span className="shrink-0 font-bold text-verde">{brl2(i.valor)}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-sm text-grafite/70">
+                  Entre em contato para mais opções de pagamento dos exames e taxas.
+                </p>
               </div>
             </div>
           ))}
