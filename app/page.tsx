@@ -16,8 +16,8 @@ import aprovado9 from "./aprovado9.jpg";
 // Para acrescentar ou tirar fotos de alunos aprovados, mexa só nesta lista.
 const aprovados = [aprovado1, aprovado2, aprovado3, aprovado4, aprovado5, aprovado6, aprovado7, aprovado8, aprovado9].map((f) => f.src);
 
-// Mude para true quando o pagamento online (PagBank) estiver configurado.
-const PAGAMENTO_ONLINE = false;
+// O pagamento online liga quando a variável NEXT_PUBLIC_PAGAMENTO_ONLINE = true estiver no Render.
+const PAGAMENTO_ONLINE = process.env.NEXT_PUBLIC_PAGAMENTO_ONLINE === "true";
 
 const turnos = ["Manhã", "Tarde", "Noite"];
 
@@ -145,8 +145,6 @@ export default function Home() {
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState("");
-  const [pix, setPix] = useState<{ text: string; png?: string } | null>(null);
-  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     const r = new URLSearchParams(window.location.search).get("pagamento");
@@ -181,22 +179,10 @@ export default function Home() {
     window.open(waLink(msg), "_blank", "noopener,noreferrer");
   }
 
-  async function copiar() {
-    if (!pix) return;
-    try {
-      await navigator.clipboard.writeText(pix.text);
-      setCopiado(true);
-    } catch {
-      setErro("Não consegui copiar. Segure o código e copie manualmente.");
-    }
-  }
-
   async function pagarOnline(e: React.FormEvent) {
     e.preventDefault();
     if (!validar()) return;
     setEnviando(true);
-    setPix(null);
-    setCopiado(false);
     try {
       const res = await fetch("/api/pagamento", {
         method: "POST",
@@ -206,11 +192,6 @@ export default function Home() {
       const data = await res.json();
       if (res.ok && data.url) {
         window.location.href = data.url;
-        return;
-      }
-      if (res.ok && data.pix) {
-        setPix(data.pix);
-        setEnviando(false);
         return;
       }
       setErro(data.erro || "Não foi possível abrir o pagamento. Tente pelo WhatsApp.");
@@ -391,31 +372,6 @@ export default function Home() {
             </button>
           )}
         </form>
-
-        {pix && (
-          <div className="mt-8 rounded-xl border-2 border-verde bg-verde-fundo p-5 text-center">
-            <p className="text-lg font-extrabold text-verde">Pague {brl(total)} no Pix</p>
-            <p className="mt-1 text-sm text-grafite/80">
-              Abra o app do seu banco, escolha Pix e leia o QR Code ou use o copia e cola.
-            </p>
-            {pix.png && (
-              <img src={pix.png} alt="QR Code do Pix" className="mx-auto mt-4 h-56 w-56 rounded-lg bg-white p-2" />
-            )}
-            <p className="mt-4 break-all rounded-lg bg-white p-3 text-left text-xs">{pix.text}</p>
-            <button type="button" onClick={copiar} className="mt-3 w-full rounded-full bg-ouro px-6 py-3 font-bold text-verde hover:bg-ouro-escuro hover:text-white">
-              {copiado ? "Código copiado!" : "Copiar código Pix"}
-            </button>
-            <p className="mt-4 text-sm text-grafite/80">Depois de pagar, avise a equipe para confirmar sua matrícula.</p>
-            <a
-              href={waLink(`Olá! Paguei no Pix o pacote ${pacote.aulas} aulas (${cat.nome}). Nome: ${nome.trim()}. Telefone: ${telefone.trim()}.`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block font-bold text-verde underline"
-            >
-              Avisar no WhatsApp
-            </a>
-          </div>
-        )}
       </section>
 
       <section id="onde" className="bg-verde-fundo">
