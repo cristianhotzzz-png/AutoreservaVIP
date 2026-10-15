@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { categorias, DESCONTO_PIX } from "../../config";
 
-type Link = { rel?: string; href?: string; media?: string };
+type Link = { rel?: string; href?: string };
 
 export async function POST(req: Request) {
   const token = process.env.PAGBANK_TOKEN;
@@ -29,46 +29,30 @@ export async function POST(req: Request) {
   }
 
   const valor = forma === "Pix" ? pacote.preco - DESCONTO_PIX : pacote.preco;
-  const centavos = Math.round(valor * 100);
-  const nomeItem = `${cat.nome} - ${pacote.aulas} aulas - ${nome}`.slice(0, 64);
-  const referencia = `RVIP-${telefone}-${Date.now()}`;
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
-
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
   const proto = req.headers.get("x-forwarded-proto") ?? "https";
   const site = process.env.SITE_URL || `${proto}://${host}`;
+
+  const checkout = {
+    reference_id: `RVIP-${telefone}-${Date.now()}`,
+    items: [
+      {
+        reference_id: `${cat.id}-${pacote.aulas}`,
+        name: `${cat.nome} - ${pacote.aulas} aulas - ${nome}`.slice(0, 64),
+        quantity: 1,
+        unit_amount: Math.round(valor * 100),
+      },
+    ],
+    payment_methods: [{ type: forma === "Pix" ? "PIX" : "CREDIT_CARD" }],
+    redirect_url: `${site}/?pagamento=sucesso`,
+  };
+
   const falha = { erro: "Não foi possível abrir o pagamento agora." };
-
   try {
-    if (forma === "Pix") {
-      const res = await fetch(`${base}/orders`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          reference_id: referencia,
-          items: [{ name: nomeItem, quantity: 1, unit_amount: centavos }],
-          qr_codes: [{ amount: { value: centavos } }],
-        }),
-      });
-      const data = await res.json();
-      const qr = data?.qr_codes?.[0];
-      const png = ((qr?.links ?? []) as Link[]).find((l) => l.media === "image/png")?.href;
-      if (!res.ok || !qr?.text) {
-        console.error("PagBank recusou o pedido Pix:", res.status, JSON.stringify(data));
-        return NextResponse.json(falha, { status: 502 });
-      }
-      return NextResponse.json({ pix: { text: qr.text, png } });
-    }
-
     const res = await fetch(`${base}/checkouts`, {
       method: "POST",
-      headers,
-      body: JSON.stringify({
-        reference_id: referencia,
-        items: [{ name: nomeItem, quantity: 1, unit_amount: centavos }],
-        payment_methods: [{ type: "CREDIT_CARD" }],
-        redirect_url: `${site}/?pagamento=sucesso`,
-      }),
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(checkout),
     });
     const data = await res.json();
     const pay = ((data?.links ?? []) as Link[]).find((l) => l.rel === "PAY")?.href;
