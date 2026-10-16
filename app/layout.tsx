@@ -38,10 +38,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="bg-verde text-white">
           <div className="mx-auto max-w-5xl px-4 py-8 text-sm">
             <img src={logo.src} alt="Autoescola Reserva VIP" className="h-20 w-auto rounded-md" />
-            <p className="mt-3 text-white/80">Reserva, Paraná</p>
+            <p className="mt-4 text-base font-bold">Autoescola Reserva VIP</p>
+            <p className="mt-1 text-white/80">CNPJ: 65.081.277/0001-31</p>
+            <p className="mt-3 text-white/90">
+              Avenida Coronel Rogério Borba, 1297, Centro
+              <br />
+              Reserva - PR, CEP 84320-000
+            </p>
             <p className="mt-3">
-              WhatsApp:{" "}
-              <a className="font-semibold text-ouro underline" href={duvida}>{WHATSAPP_LABEL}</a>
+              Telefones:{" "}
+              <a className="font-semibold text-ouro underline" href="tel:+5542999230294">{WHATSAPP_LABEL}</a>
+              {" "}e{" "}
+              <a className="font-semibold text-ouro underline" href="tel:+5542988652819">(42) 98865-2819</a>
+            </p>
+            <p className="mt-1">
+              <a className="font-semibold text-ouro underline" href={duvida}>Chamar no WhatsApp</a>
             </p>
             <p className="mt-6 text-xs text-white/60">© Autoescola Reserva VIP. Todos os direitos reservados.</p>
           </div>
